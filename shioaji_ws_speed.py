@@ -4,20 +4,20 @@ import json
 import time
 import statistics
 from datetime import datetime
-import fubon_neo
-from fubon_neo.sdk import FubonSDK, Mode, Order
+import shioaji as sj
 
 class fubon_ws_speed_tester():
     def __init__(self):
         self.tester_logger = my_logger(file_name="fb_ws")
         self.logger = self.tester_logger.logger
-        self.logger.info(f"Current SDK Version: {fubon_neo.__version__}")
+        self.logger.info(f"Current SDK Version: {sj.__version__}")
 
-        self.sdk = FubonSDK()
-        self.SDK_login("./account.json")
-
-        self.ws_mode = Mode.Speed
-        self.sdk.init_realtime(self.ws_mode)
+        self.api = sj.Shioaji()
+        self.api.login(
+            api_key="7cjHv9s9RvhJUqtbSXac6s67J6be9tx5hbvH1fFvpHR8", 
+            secret_key="BKwoXhpGwgxxfmUay1cFLg3qmAqHqUoxvATJHMphutSP",
+            contracts_cb=lambda security_type: print(f"{repr(security_type)} fetch done.")
+        )
 
         self.reststock = self.sdk.marketdata.rest_client.stock
         self.ws_stock = self.sdk.marketdata.websocket_client.stock
@@ -26,6 +26,8 @@ class fubon_ws_speed_tester():
         self.subscribed_ids = {}
         self.latency_keeper = {}
 
+        self.api.quote.set_on_tick_stk_v1_callback(self.handle_message)
+
         self.ws_stock.on('message', self.handle_message)
         self.ws_stock.on('connect', self.handle_connect)
         self.ws_stock.on('disconnect', self.handle_disconnect)
@@ -33,10 +35,11 @@ class fubon_ws_speed_tester():
         self.ws_stock.connect()
     
     def ws_subscribe(self, symbol):
-        self.ws_stock.subscribe({
-            'symbol': symbol,
-            'channel': "trades"
-        })
+        self.api.quote.subscribe(
+            self.api.Contracts.Stocks[symbol], 
+            quote_type = sj.constant.QuoteType.Tick,
+            version = sj.constant.QuoteVersion.v1
+        )
 
     def latency_statistics_cal(self):
         for symbol in  list(self.latency_keeper.keys()):
@@ -113,21 +116,6 @@ class fubon_ws_speed_tester():
 
     def handle_error(self, error):
         self.logger.error(f'WS_whole data error: {error}')
-
-    def SDK_login(self, login_path):
-        with open(login_path) as user_file:
-            acc_json = json.load(user_file)
-
-        if acc_json['cert_pwd']:
-            accounts = self.sdk.login(acc_json['id'], acc_json['pwd'], acc_json['cert_path'], acc_json['cert_pwd'])
-        else:
-            accounts = self.sdk.login(acc_json['id'], acc_json['pwd'], acc_json['cert_path'])
-        self.logger.info(str(accounts))
-
-        for acc in accounts.data:
-            if acc.account == acc_json['target_acc']:
-                self.active_acc = acc
-        self.logger.info("Current use: {}".format(self.active_acc))
 
 if __name__=="__main__":
     speed_tester = fubon_ws_speed_tester()
