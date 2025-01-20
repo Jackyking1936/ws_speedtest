@@ -55,7 +55,7 @@ class fubon_ws_speed_tester():
         data = msg["data"]
         # print(event, data)
 
-         # subscribed事件處理
+        # subscribed事件處理
         if event == "subscribed":
             if type(data) == list:
                 for subscribed_item in data:

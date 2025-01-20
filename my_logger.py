@@ -54,3 +54,17 @@ class logger_with_pyside6(logging.Handler):
         log_message = self.format(record)
         # 在 GUI 中追加 log 訊息
         self.log_signal.emit(log_message)
+
+# 將 stdout 和 stderr 重定向到 logging
+class StreamToLogger:
+    def __init__(self, logger, log_level):
+        self.logger = logger
+        self.log_level = log_level
+        self.linebuf = ''
+
+    def write(self, buf):
+        for line in buf.rstrip().splitlines():
+            self.logger.log(self.log_level, line.rstrip())
+
+    def flush(self):
+        pass
