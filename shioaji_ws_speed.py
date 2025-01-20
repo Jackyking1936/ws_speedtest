@@ -42,17 +42,33 @@ class sino_ws_speed_tester():
 
     def latency_statistics_cal(self):
         for symbol in  list(self.latency_keeper.keys()):
-            self.logger.info(f"symbol:{symbol}, \
-                               num:{len(self.latency_keeper[symbol])}, \
-                               max:{max(self.latency_keeper[symbol])}, \
-                               min:{min(self.latency_keeper[symbol])}, \
-                               mean:{statistics.mean(self.latency_keeper[symbol])}, \
-                               median:{statistics.median(self.latency_keeper[symbol])}, \
-                               std:{statistics.stdev(self.latency_keeper[symbol])}")
+            if len(self.latency_keeper[symbol]) > 1:
+                self.logger.info(f"""symbol:{symbol}, 
+                                num:{len(self.latency_keeper[symbol])}, 
+                                max:{max(self.latency_keeper[symbol])}, 
+                                min:{min(self.latency_keeper[symbol])}, 
+                                mean:{statistics.mean(self.latency_keeper[symbol])}, 
+                                median:{statistics.median(self.latency_keeper[symbol])}, 
+                                std:{statistics.stdev(self.latency_keeper[symbol])}""")
+            else:
+                self.logger.info(f"{symbol} length is not enough, length: {len(self.latency_keeper[symbol])}")
 
     def handle_message(self, exchange, tick):
-        recived_time = time.time()
-        self.logger.debug(f"Exchange: {exchange}, Tick: {tick}")
+        recived_time = datetime.now()
+        # self.logger.debug(f"Exchange: {exchange}, Tick: {tick}")
+        symbol = tick.code
+        price = tick.close
+        volume = tick.total_volume
+        tick_time = tick.datetime
+        time_diff = recived_time-tick_time
+        latency = time_diff.total_seconds()*1000
+        latency = round(latency, 2)
+        self.logger.info(f"symbol: {symbol}, p: {price}, v: {volume}, Recived Time: {recived_time}, Tick Time: {tick_time}, Latency: {latency}ms")
+
+        if symbol not in self.latency_keeper:
+            self.latency_keeper[symbol] = []
+
+        self.latency_keeper[symbol].append(latency)
     
     def close_trader(self):
         self.logger.info(f"Close signal recived, closing....")
@@ -75,3 +91,5 @@ if __name__=="__main__":
         user_input = input()
         if user_input == 'done':
             speed_tester.close_trader()
+        elif user_input == 'avg':
+            speed_tester.latency_statistics_cal()
