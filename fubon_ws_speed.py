@@ -147,6 +147,16 @@ if __name__=="__main__":
     speed_tester = fubon_ws_speed_tester()
     speed_tester.ws_subscribe('2330')
     speed_tester.ws_subscribe('0050')
+    speed_tester.ws_subscribe('2498')
+    speed_tester.ws_subscribe('3231')
+    speed_tester.ws_subscribe('00937B')
+    speed_tester.ws_subscribe('9105')
+    speed_tester.ws_subscribe('00637L')
+    speed_tester.ws_subscribe('2888')
+    speed_tester.ws_subscribe('6558')
+    speed_tester.ws_subscribe('3645')
+    speed_tester.ws_subscribe('4931')
+    speed_tester.ws_subscribe('00929')
     while not speed_tester.done_flag:
         user_input = input()
         if user_input == 'done':
